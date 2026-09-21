@@ -1,0 +1,11 @@
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+app/data/reviews/
+app/data/settings.json
+app/data/patterns.md
+*.log

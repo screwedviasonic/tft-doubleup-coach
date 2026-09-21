@@ -1,0 +1,9 @@
+.env
+data/settings.json
+data/reviews/
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.DS_Store

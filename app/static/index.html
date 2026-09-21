@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TFT Double Up Coach</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: "#0f1220",
+            panel: "#171b2e",
+            accent: "#7c5cff",
+            good: "#3dd68c",
+            bad: "#ff6b8a",
+            mute: "#8b93b0",
+          },
+          fontFamily: {
+            sans: ["IBM Plex Sans", "ui-sans-serif", "system-ui", "sans-serif"],
+            mono: ["IBM Plex Mono", "ui-monospace", "monospace"],
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { background: radial-gradient(1200px 600px at 10% -10%, #2a1f55 0%, transparent 50%), radial-gradient(900px 500px at 100% 0%, #1a3a4a 0%, transparent 45%), #0f1220; }
+    .card { background: rgba(23,27,46,.92); border: 1px solid rgba(124,92,255,.25); }
+    .btn-primary { background: linear-gradient(135deg, #7c5cff, #5b8cff); }
+    .btn-primary:hover { filter: brightness(1.08); }
+    .btn-primary:disabled { opacity: .5; filter: none; }
+    pre.md { white-space: pre-wrap; word-break: break-word; }
+  </style>
+</head>
+<body class="text-white font-sans min-h-screen">
+  <div class="max-w-5xl mx-auto px-4 py-8">
+    <header class="flex flex-wrap items-center justify-between gap-4 mb-8">
+      <div>
+        <p class="text-accent text-xs tracking-[0.2em] uppercase font-semibold">Post-game · Double Up</p>
+        <h1 class="text-3xl font-bold mt-1">TFT Double Up Coach</h1>
+        <p id="statusLine" class="text-mute text-sm mt-1">Loading…</p>
+      </div>
+      <nav class="flex gap-2">
+        <button data-tab="home" class="tab px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm font-medium">Home</button>
+        <button data-tab="settings" class="tab px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm font-medium">Settings</button>
+        <button data-tab="patterns" class="tab px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm font-medium">Patterns</button>
+      </nav>
+    </header>
+
+    <!-- HOME -->
+    <section id="tab-home" class="space-y-6">
+      <div class="card rounded-2xl p-8 text-center shadow-2xl">
+        <p class="text-mute text-sm mb-4">Open this after every Double Up game</p>
+        <button id="btnReviewLast" class="btn-primary w-full sm:w-auto min-w-[280px] text-xl font-bold px-10 py-6 rounded-2xl shadow-lg transition">
+          Review last Double Up game
+        </button>
+        <p id="reviewHint" class="text-mute text-xs mt-4"></p>
+      </div>
+
+      <div class="card rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold">Recent Double Up matches</h2>
+          <button id="btnRefresh" class="text-sm text-accent hover:underline">Refresh</button>
+        </div>
+        <div id="matchList" class="space-y-2">
+          <p class="text-mute text-sm">Loading matches…</p>
+        </div>
+      </div>
+
+      <div id="autopsyPanel" class="hidden card rounded-2xl p-6 space-y-5">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p class="text-xs text-accent uppercase tracking-widest font-semibold">Autopsy</p>
+            <h2 id="autopsyTitle" class="text-2xl font-bold mt-1"></h2>
+            <p id="autopsyMeta" class="text-mute text-sm mt-1"></p>
+          </div>
+          <span id="dryBadge" class="hidden text-xs px-2 py-1 rounded bg-amber-500/20 text-amber-200 border border-amber-500/30">DRY-RUN</span>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-good mb-1">Lobby story</h3>
+          <p id="lobbyStory" class="text-sm leading-relaxed text-white/90"></p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <h3 class="font-semibold text-good mb-2">What you did right</h3>
+            <ul id="rightsList" class="space-y-2 text-sm"></ul>
+          </div>
+          <div>
+            <h3 class="font-semibold text-bad mb-2">What went wrong</h3>
+            <ul id="wrongsList" class="space-y-2 text-sm"></ul>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="bg-black/20 rounded-xl p-4">
+            <h3 class="font-semibold mb-2 text-sm text-mute">Your board</h3>
+            <ul id="boardList" class="font-mono text-xs space-y-1"></ul>
+          </div>
+          <div class="bg-black/20 rounded-xl p-4">
+            <h3 class="font-semibold mb-2 text-sm text-mute">Partner board</h3>
+            <ul id="partnerBoardList" class="font-mono text-xs space-y-1"></ul>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="font-semibold mb-1">Double Up note</h3>
+          <p id="duoNote" class="text-sm leading-relaxed"></p>
+        </div>
+        <div class="border border-accent/40 rounded-xl p-4 bg-accent/10">
+          <h3 class="font-semibold mb-1">One drill</h3>
+          <p id="drill" class="text-sm leading-relaxed"></p>
+        </div>
+        <details class="text-sm text-mute">
+          <summary class="cursor-pointer hover:text-white">API limits</summary>
+          <ul id="limitsList" class="mt-2 list-disc pl-5 space-y-1"></ul>
+        </details>
+        <details class="text-sm">
+          <summary class="cursor-pointer text-mute hover:text-white">Markdown</summary>
+          <pre id="mdOut" class="md mt-2 p-3 bg-black/30 rounded-lg font-mono text-xs text-white/80"></pre>
+        </details>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="tab-settings" class="hidden">
+      <div class="card rounded-2xl p-6 max-w-xl space-y-4">
+        <h2 class="text-xl font-semibold">Settings</h2>
+        <p class="text-mute text-sm">API key is stored in local <code class="text-accent">.env</code> / not committed. Without a key, the app runs in dry-run mode on sample summaries.</p>
+        <label class="block text-sm">
+          <span class="text-mute">Riot ID</span>
+          <input id="setRiotId" class="mt-1 w-full rounded-lg bg-black/30 border border-white/10 px-3 py-2" placeholder="Name#TAG" />
+        </label>
+        <label class="block text-sm">
+          <span class="text-mute">Region</span>
+          <input id="setRegion" class="mt-1 w-full rounded-lg bg-black/30 border border-white/10 px-3 py-2" placeholder="NA" />
+        </label>
+        <label class="block text-sm">
+          <span class="text-mute">Partner hint</span>
+          <input id="setPartner" class="mt-1 w-full rounded-lg bg-black/30 border border-white/10 px-3 py-2" placeholder="Tudon#NA1" />
+        </label>
+        <label class="block text-sm">
+          <span class="text-mute">Riot API key</span>
+          <input id="setKey" type="password" autocomplete="off" class="mt-1 w-full rounded-lg bg-black/30 border border-white/10 px-3 py-2" placeholder="Leave blank to keep existing" />
+        </label>
+        <button id="btnSaveSettings" class="btn-primary px-5 py-2.5 rounded-lg font-semibold text-sm">Save settings</button>
+        <p id="settingsMsg" class="text-sm text-mute"></p>
+      </div>
+    </section>
+
+    <!-- PATTERNS -->
+    <section id="tab-patterns" class="hidden">
+      <div class="card rounded-2xl p-6">
+        <h2 class="text-xl font-semibold mb-3">Pattern ledger</h2>
+        <pre id="patternsOut" class="md font-mono text-xs text-white/85 bg-black/20 rounded-xl p-4 max-h-[70vh] overflow-auto"></pre>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function showTab(name) {
+      ["home", "settings", "patterns"].forEach((t) => {
+        $(`tab-${t}`).classList.toggle("hidden", t !== name);
+      });
+      document.querySelectorAll(".tab").forEach((b) => {
+        b.classList.toggle("bg-accent/30", b.dataset.tab === name);
+      });
+      if (name === "patterns") loadPatterns();
+      if (name === "settings") loadSettingsForm();
+    }
+
+    document.querySelectorAll(".tab").forEach((b) => {
+      b.addEventListener("click", () => showTab(b.dataset.tab));
+    });
+
+    async function api(path, opts) {
+      const res = await fetch(path, {
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        ...opts,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.detail || res.statusText);
+      return data;
+    }
+
+    async function boot() {
+      try {
+        const h = await api("/api/health");
+        $("statusLine").textContent = h.dry_run
+          ? `Dry-run · ${h.riot_id} · ${h.sample_count} sample matches`
+          : `Live · ${h.riot_id} · key loaded`;
+        $("reviewHint").textContent = h.dry_run
+          ? "No API key detected — reviewing sample summaries. Add a key in Settings for live pulls."
+          : "Using RIOT_API_KEY from .env — click to pull & autopsy your latest Double Up.";
+        await loadMatches();
+      } catch (e) {
+        $("statusLine").textContent = "Failed to reach API: " + e.message;
+      }
+    }
+
+    async function loadMatches(refresh = false) {
+      $("matchList").innerHTML = `<p class="text-mute text-sm">Loading…</p>`;
+      try {
+        const data = await api(`/api/matches?refresh=${refresh ? "true" : "false"}`);
+        if (!data.matches.length) {
+          $("matchList").innerHTML = `<p class="text-mute text-sm">No matches found.</p>`;
+          return;
+        }
+        $("matchList").innerHTML = data.matches
+          .map(
+            (m) => `
+          <button data-mid="${m.match_id}" class="match-row w-full text-left flex flex-wrap items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 transition">
+            <span class="font-mono text-accent text-sm w-28">#${m.placement ?? "?"} / P#${m.partner_placement ?? "?"}</span>
+            <span class="font-medium flex-1">${m.match_id}</span>
+            <span class="text-mute text-xs">${m.when || ""} · L${m.level ?? "?"} · R${m.last_round ?? "?"}</span>
+            <span class="text-xs text-mute truncate max-w-[180px]">${(m.traits || []).join(" · ")}</span>
+          </button>`
+          )
+          .join("");
+        document.querySelectorAll(".match-row").forEach((btn) => {
+          btn.addEventListener("click", () => runReview(btn.dataset.mid));
+        });
+      } catch (e) {
+        $("matchList").innerHTML = `<p class="text-bad text-sm">${e.message}</p>`;
+      }
+    }
+
+    function liPoint(p) {
+      return `<li class="leading-relaxed"><span class="font-semibold">${escapeHtml(p.title)}</span> — ${escapeHtml(p.detail)} <span class="text-mute text-xs">(${escapeHtml(p.confidence || "")})</span></li>`;
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function renderAutopsy(a) {
+      $("autopsyPanel").classList.remove("hidden");
+      $("autopsyTitle").textContent = `${a.match_id} · #${a.placement}`;
+      $("autopsyMeta").textContent = `${a.when || ""} · You #${a.placement} · ${a.partner_name || "Partner"} #${a.partner_placement} · L${a.level} · R${a.last_round} · ${a.gold_left}g`;
+      $("dryBadge").classList.toggle("hidden", !a.dry_run);
+      $("lobbyStory").textContent = a.lobby_story;
+      $("rightsList").innerHTML = (a.rights || []).map(liPoint).join("");
+      $("wrongsList").innerHTML = (a.wrongs || []).map(liPoint).join("");
+      $("duoNote").textContent = a.double_up_note;
+      $("drill").innerHTML = escapeHtml(a.drill).replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+      $("boardList").innerHTML = (a.board || []).map((x) => `<li>${escapeHtml(x)}</li>`).join("") || "<li class='text-mute'>—</li>";
+      $("partnerBoardList").innerHTML = (a.partner_board || []).map((x) => `<li>${escapeHtml(x)}</li>`).join("") || "<li class='text-mute'>—</li>";
+      $("limitsList").innerHTML = (a.api_limits || []).map((x) => `<li>${escapeHtml(x)}</li>`).join("");
+      $("mdOut").textContent = a.markdown || "";
+      $("autopsyPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    async function runReview(matchId) {
+      const btn = $("btnReviewLast");
+      btn.disabled = true;
+      btn.textContent = "Reviewing…";
+      try {
+        const body = matchId ? { match_id: matchId } : {};
+        const a = await api("/api/review", { method: "POST", body: JSON.stringify(body) });
+        renderAutopsy(a);
+      } catch (e) {
+        alert("Review failed: " + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Review last Double Up game";
+      }
+    }
+
+    $("btnReviewLast").addEventListener("click", () => runReview(null));
+    $("btnRefresh").addEventListener("click", () => loadMatches(true));
+
+    async function loadSettingsForm() {
+      const s = await api("/api/settings");
+      $("setRiotId").value = s.riot_id || "";
+      $("setRegion").value = s.region || "NA";
+      $("setPartner").value = s.partner_hint || "";
+      $("setKey").value = "";
+      $("setKey").placeholder = s.has_api_key ? "Key on file — enter new to replace" : "RGAPI-…";
+    }
+
+    $("btnSaveSettings").addEventListener("click", async () => {
+      try {
+        const payload = {
+          riot_id: $("setRiotId").value,
+          region: $("setRegion").value,
+          partner_hint: $("setPartner").value,
+        };
+        const key = $("setKey").value.trim();
+        if (key) payload.riot_api_key = key;
+        const s = await api("/api/settings", { method: "POST", body: JSON.stringify(payload) });
+        $("settingsMsg").textContent = s.has_api_key ? "Saved. Live mode available." : "Saved. Still dry-run (no key).";
+        $("setKey").value = "";
+        boot();
+      } catch (e) {
+        $("settingsMsg").textContent = e.message;
+      }
+    });
+
+    async function loadPatterns() {
+      const p = await api("/api/patterns");
+      $("patternsOut").textContent = p.markdown || "(empty)";
+    }
+
+    boot();
+  </script>
+</body>
+</html>
