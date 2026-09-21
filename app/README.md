@@ -5,7 +5,7 @@ Post-game autopsy coach for TFT Double Up. Open after a game → review last lob
 ## Setup
 
 ```bash
-cd /workspace/tft-doubleup-coach/app
+cd app
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -18,7 +18,7 @@ Without a key the app runs in **dry-run** mode using `../data/summaries.json` (o
 ## Run
 
 ```bash
-cd /workspace/tft-doubleup-coach/app
+cd app
 source .venv/bin/activate   # if you created a venv
 uvicorn main:app --host 127.0.0.1 --port 8765 --reload
 ```
