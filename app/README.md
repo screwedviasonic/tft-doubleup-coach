@@ -11,9 +11,9 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Riot API key: put `RIOT_API_KEY=…` in ``../.env` (repo root) or `app/.env`` (parent) or `app/.env`. **Never commit the key.**
+Riot API key: put `RIOT_API_KEY=...` in `../.env` (repo root) or `app/.env`. **Never commit the key.**
 
-Without a key the app runs in **dry-run** mode using `../data/summaries.json` (or `../export/sample_summaries.json`).
+Without a key the app runs in **dry-run** mode using `../samples/sample_summaries.json` (or local `../data/summaries.json` if you have it).
 
 ## Run
 
